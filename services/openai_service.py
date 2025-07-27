@@ -37,7 +37,7 @@ from services.base import AIReviewService
 # Configuration
 # ------------------------------------------------------------------------------
 
-DEFAULT_MODEL: str = "o4-mini"  # fast, multimodal reasoning model (April 2025)
+DEFAULT_MODEL: str = "gpt-4.1"  # fast, multimodal reasoning model (April 2025)
 MAX_TOKENS: int = 200           # JSON output is short; keep a comfortable head‑room
 TEMPERATURE: float = 0.7
 
@@ -107,7 +107,7 @@ class OpenAIReviewService(AIReviewService):
                     {
                         "role": "system",
                         "content": (
-                            "Sei un critico di videogiochi esperto. "
+                            "Sei un critico di videogiochi esperto e severo. "
                             "Rispondi in italiano con un JSON che abbia esattamente "
                             'due chiavi: "review" (stringa) e "rating" (intero 1‑10). '
                             "Nessun markdown, nessun testo extra."
