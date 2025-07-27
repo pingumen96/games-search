@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtualenv
+.venv/
+venv/
+ENV/
+
+# VSCode
+.vscode/
+
+# Environment variables
+.env
+.env.*
+
+# CSV/exports
+*.csv
+
+# OS
+.DS_Store
+Thumbs.db
