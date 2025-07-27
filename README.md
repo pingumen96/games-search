@@ -1,6 +1,6 @@
 # Games Database - Interfaccia Interattiva
 
-Un'applicazione Python interattiva per cercare giochi utilizzando l'API RAWG, con funzionalità avanzate di filtraggio, ordinamento ed esportazione.
+Un'applicazione Python interattiva per cercare giochi utilizzando l'API RAWG, con funzionalità avanzate di filtraggio, ordinamento ed esportazione multi-formato.
 
 ## 🚀 Funzionalità
 
@@ -30,8 +30,11 @@ Un'applicazione Python interattiva per cercare giochi utilizzando l'API RAWG, co
 - **Piattaforma**: per nome piattaforma
 - **Nessun ordinamento**: ordine originale API
 
-### 5. **Esportazione CSV**
-- Salvataggio automatico dei risultati
+### 5. **Esportazione Multi-Formato** 🆕
+- **CSV**: formato standard per fogli di calcolo
+- **Markdown**: tabelle formattate per documenti
+- **XLSX**: file Excel nativi con formattazione automatica
+- **XML**: struttura gerarchica con metadati
 - Nome file personalizzabile
 - Encoding UTF-8 per caratteri speciali
 - Path assoluto mostrato dopo l'esportazione
@@ -44,7 +47,8 @@ Un'applicazione Python interattiva per cercare giochi utilizzando l'API RAWG, co
 
 ### Dipendenze
 ```bash
-pip install requests tabulate questionary
+pip install requests tabulate questionary python-dotenv openpyxl
+```
 ```
 
 ## 🎮 Utilizzo

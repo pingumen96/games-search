@@ -12,6 +12,13 @@ import os
 import csv
 import traceback
 from dotenv import load_dotenv
+import xml.etree.ElementTree as ET
+import xml.dom.minidom
+try:
+    from openpyxl import Workbook
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
 
 class GamesDB:
     def __init__(self):
@@ -200,37 +207,167 @@ class GamesDB:
 
         return sorted_games
 
-    def export_to_csv(self, games):
-        """Esporta i risultati in CSV"""
+    def export_data(self, games):
+        """Esporta i risultati in vari formati"""
         if not games:
             print("❌ Nessun dato da esportare!")
             return
 
-        export = questionary.confirm("Vuoi esportare i risultati in CSV?").ask()
+        export = questionary.confirm("Vuoi esportare i risultati?").ask()
 
-        if export:
-            filename = questionary.text(
-                "Nome del file (senza estensione):",
-                default="games_results"
-            ).ask()
+        if not export:
+            return
 
-            if not filename:
-                filename = "games_results"
+        # Scelta del formato
+        format_choice = questionary.select(
+            "Scegli il formato di esportazione:",
+            choices=[
+                "CSV",
+                "Markdown",
+                "XLSX (Excel)" if OPENPYXL_AVAILABLE else "XLSX (Excel) - Non disponibile",
+                "XML"
+            ]
+        ).ask()
 
-            filepath = f"{filename}.csv"
+        # Se XLSX non è disponibile
+        if format_choice.startswith("XLSX") and not OPENPYXL_AVAILABLE:
+            print("❌ La libreria openpyxl non è installata. Installa con: pip install openpyxl")
+            return
 
-            try:
-                with open(filepath, 'w', newline='', encoding='utf-8') as csvfile:
-                    fieldnames = ["Title", "Platforms", "Release Date", "Genres"]
-                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        # Rimuovi la parte " - Non disponibile" se presente
+        format_choice = format_choice.split(" -")[0]
 
-                    writer.writeheader()
-                    for game in games:
-                        writer.writerow(game)
+        filename = questionary.text(
+            "Nome del file (senza estensione):",
+            default="games_results"
+        ).ask()
 
-                print(f"✅ File esportato con successo: {os.path.abspath(filepath)}")
-            except IOError as e:
-                print(f"❌ Errore durante l'esportazione: {e}")
+        if not filename:
+            filename = "games_results"
+
+        # Determina l'estensione del file
+        extensions = {
+            "CSV": ".csv",
+            "Markdown": ".md",
+            "XLSX (Excel)": ".xlsx",
+            "XML": ".xml"
+        }
+        
+        filepath = f"{filename}{extensions[format_choice]}"
+
+        try:
+            if format_choice == "CSV":
+                self._export_csv(games, filepath)
+            elif format_choice == "Markdown":
+                self._export_markdown(games, filepath)
+            elif format_choice == "XLSX (Excel)":
+                self._export_xlsx(games, filepath)
+            elif format_choice == "XML":
+                self._export_xml(games, filepath)
+
+            print(f"✅ File esportato con successo: {os.path.abspath(filepath)}")
+        except Exception as e:
+            print(f"❌ Errore durante l'esportazione: {e}")
+
+    def _export_csv(self, games, filepath):
+        """Esporta in formato CSV"""
+        with open(filepath, 'w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ["Title", "Platforms", "Release Date", "Genres"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for game in games:
+                writer.writerow(game)
+
+    def _export_markdown(self, games, filepath):
+        """Esporta in formato Markdown"""
+        with open(filepath, 'w', encoding='utf-8') as mdfile:
+            # Intestazione
+            mdfile.write("# Games Database Results\n\n")
+            mdfile.write(f"Exported on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+            mdfile.write(f"Total games found: {len(games)}\n\n")
+            
+            # Tabella
+            headers = ["Title", "Platforms", "Release Date", "Genres"]
+            table_data = []
+            
+            for game in games:
+                table_data.append([
+                    game["Title"],
+                    game["Platforms"],
+                    game["Release Date"] or "N/A",
+                    game["Genres"]
+                ])
+            
+            # Usa tabulate per generare la tabella markdown
+            markdown_table = tabulate(table_data, headers=headers, tablefmt="github")
+            mdfile.write(markdown_table)
+
+    def _export_xlsx(self, games, filepath):
+        """Esporta in formato XLSX (Excel)"""
+        if not OPENPYXL_AVAILABLE:
+            raise ImportError("openpyxl non è installato")
+        
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Games Results"
+        
+        # Headers
+        headers = ["Title", "Platforms", "Release Date", "Genres"]
+        for col, header in enumerate(headers, 1):
+            ws.cell(row=1, column=col, value=header)
+        
+        # Data
+        for row, game in enumerate(games, 2):
+            ws.cell(row=row, column=1, value=game["Title"])
+            ws.cell(row=row, column=2, value=game["Platforms"])
+            ws.cell(row=row, column=3, value=game["Release Date"] or "N/A")
+            ws.cell(row=row, column=4, value=game["Genres"])
+        
+        # Auto-adjust column widths
+        for col in range(1, 5):
+            max_length = 0
+            column = ws.column_dimensions[chr(64 + col)]
+            for row in range(1, len(games) + 2):
+                try:
+                    cell_value = str(ws.cell(row=row, column=col).value)
+                    if len(cell_value) > max_length:
+                        max_length = len(cell_value)
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            column.width = adjusted_width
+        
+        wb.save(filepath)
+
+    def _export_xml(self, games, filepath):
+        """Esporta in formato XML"""
+        root = ET.Element("games_database")
+        
+        # Metadata
+        metadata = ET.SubElement(root, "metadata")
+        ET.SubElement(metadata, "export_date").text = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        ET.SubElement(metadata, "total_games").text = str(len(games))
+        
+        # Games
+        games_element = ET.SubElement(root, "games")
+        
+        for game in games:
+            game_element = ET.SubElement(games_element, "game")
+            ET.SubElement(game_element, "title").text = game["Title"]
+            ET.SubElement(game_element, "platforms").text = game["Platforms"]
+            ET.SubElement(game_element, "release_date").text = game["Release Date"] or "N/A"
+            ET.SubElement(game_element, "genres").text = game["Genres"]
+        
+        # Pretty print XML
+        rough_string = ET.tostring(root, encoding='unicode')
+        reparsed = xml.dom.minidom.parseString(rough_string)
+        pretty_xml = reparsed.toprettyxml(indent="  ")
+        
+        # Rimuovi righe vuote extra
+        lines = [line for line in pretty_xml.split('\n') if line.strip()]
+        
+        with open(filepath, 'w', encoding='utf-8') as xmlfile:
+            xmlfile.write('\n'.join(lines))
 
     def search_games(self):
         """Funzione principale per la ricerca giochi"""
@@ -247,7 +384,7 @@ class GamesDB:
 
         # Export option
         if result_games:
-            self.export_to_csv(result_games)
+            self.export_data(result_games)
 
     def show_main_menu(self):
         """Mostra il menu principale"""
@@ -261,7 +398,7 @@ class GamesDB:
                 choices=[
                     "🔍 Cerca giochi per data",
                     "📊 Mostra ultimi risultati",
-                    "📁 Esporta ultimi risultati in CSV",
+                    "📁 Esporta ultimi risultati",
                     "❌ Esci"
                 ]
             ).ask()
@@ -273,8 +410,8 @@ class GamesDB:
                     self.display_results(self.current_games)
                 else:
                     print("\n❌ Nessun risultato precedente disponibile. Effettua prima una ricerca!")
-            elif choice == "📁 Esporta ultimi risultati in CSV":
-                self.export_to_csv(self.current_games)
+            elif choice == "📁 Esporta ultimi risultati":
+                self.export_data(self.current_games)
             elif choice == "❌ Esci":
                 print("\n👋 Arrivederci!")
                 break
