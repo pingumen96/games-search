@@ -1,6 +1,6 @@
-# Games Database - Interfaccia Interattiva
+# Games Database - Interfaccia Interattiva con AI
 
-Un'applicazione Python interattiva per cercare giochi utilizzando l'API RAWG, con funzionalità avanzate di filtraggio, ordinamento ed esportazione multi-formato.
+Un'applicazione Python interattiva per cercare giochi utilizzando l'API RAWG, con funzionalità avanzate di filtraggio, ordinamento, esportazione multi-formato e **recensioni AI generate da OpenAI**.
 
 ## 🚀 Funzionalità
 
@@ -23,18 +23,26 @@ Un'applicazione Python interattiva per cercare giochi utilizzando l'API RAWG, co
   - Arcade, Atari, Sega Genesis
 - **Input manuale**: inserimento libero di piattaforme personalizzate
 
-### 4. **Ordinamento Flessibile**
+### 4. **🤖 Recensioni AI (NOVITÀ!)**
+- **Recensioni automatiche** generate da OpenAI GPT-3.5
+- **Voti da 1 a 10** per ogni gioco
+- **Analisi contestuale** basata su genere, piattaforme e data di rilascio
+- **Feature opzionale** - attivabile durante la ricerca
+- Richiede API key OpenAI (configurabile in `.env`)
+
+### 5. **Ordinamento Flessibile**
 - **Data di rilascio**: cronologico
 - **Titolo A-Z**: alfabetico crescente
 - **Titolo Z-A**: alfabetico decrescente
 - **Piattaforma**: per nome piattaforma
 - **Nessun ordinamento**: ordine originale API
 
-### 5. **Esportazione Multi-Formato** 🆕
+### 6. **Esportazione Multi-Formato** 🆕
 - **CSV**: formato standard per fogli di calcolo
 - **Markdown**: tabelle formattate per documenti
 - **XLSX**: file Excel nativi con formattazione automatica
 - **XML**: struttura gerarchica con metadati
+- **Include recensioni AI** se generate
 - Nome file personalizzabile
 - Encoding UTF-8 per caratteri speciali
 - Path assoluto mostrato dopo l'esportazione
@@ -47,8 +55,37 @@ Un'applicazione Python interattiva per cercare giochi utilizzando l'API RAWG, co
 
 ### Dipendenze
 ```bash
-pip install requests tabulate questionary python-dotenv openpyxl
+pip install requests tabulate questionary python-dotenv openpyxl openai
 ```
+
+### Configurazione API Keys
+
+1. **Copia il file di esempio:**
+```bash
+cp .env.example .env
+```
+
+2. **Configura le API Keys nel file `.env`:**
+```env
+# RAWG API Key (Obbligatoria)
+RAWG_API_KEY=your_rawg_api_key_here
+
+# OpenAI API Key (Opzionale - per recensioni AI)
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+#### Come ottenere le API Keys:
+
+**RAWG API Key (Gratuita - Obbligatoria):**
+1. Registrati su [https://rawg.io/apidocs](https://rawg.io/apidocs)
+2. Ottieni la tua API key gratuita
+3. Inseriscila nel file `.env`
+
+**OpenAI API Key (A pagamento - Opzionale):**
+1. Vai su [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+2. Crea un account e genera una API key
+3. Inseriscila nel file `.env`
+4. **Nota**: Le recensioni AI comportano un costo per token utilizzato
 ```
 
 ## 🎮 Utilizzo
@@ -61,15 +98,16 @@ python main.py
 ### Menu Principale
 1. **🔍 Cerca giochi per data** - Nuova ricerca
 2. **📊 Mostra ultimi risultati** - Visualizza l'ultima ricerca
-3. **📁 Esporta ultimi risultati in CSV** - Salva su file
+3. **📁 Esporta ultimi risultati** - Salva in vari formati
 4. **❌ Esci** - Chiude l'applicazione
 
 ### Flusso Ricerca
 1. **Anno**: inserisci anno (1970-2025) o premi Invio per anno corrente
 2. **Mese**: inserisci mese (1-12) o premi Invio per mese corrente
 3. **Piattaforme**: scegli modalità filtro
-4. **Ordinamento**: seleziona criterio di ordinamento
-5. **Esportazione**: opzionale salvataggio CSV
+4. **🤖 Recensioni AI**: scegli se generare recensioni automatiche (opzionale)
+5. **Ordinamento**: seleziona criterio di ordinamento
+6. **Esportazione**: salvataggio in formato preferito (CSV/Markdown/XLSX/XML)
 
 ## 📋 Formato Dati
 
@@ -78,24 +116,50 @@ python main.py
 - **Piattaforme**: Lista delle piattaforme supportate
 - **Data Rilascio**: Data di pubblicazione (YYYY-MM-DD)
 - **Generi**: Categorie del gioco
+- **🤖 Recensione AI**: Mini-recensione generata da OpenAI (opzionale)
+- **🤖 Voto AI**: Valutazione da 1 a 10 (opzionale)
 
-### Esempio Output
+### Esempio Output (con AI)
 ```
-┌─────────────────────┬──────────────────────┬──────────────┬─────────────────────┐
-│ Titolo              │ Piattaforme          │ Data Rilascio│ Generi              │
-├─────────────────────┼──────────────────────┼──────────────┼─────────────────────┤
-│ Super Mario Bros.   │ NES, Nintendo Switch │ 1985-09-13   │ Platformer, Action  │
-│ The Legend of Zelda │ NES, Game Boy        │ 1986-02-21   │ Action, Adventure   │
-└─────────────────────┴──────────────────────┴──────────────┴─────────────────────┘
+┌─────────────────────┬──────────────────┬─────────────┬──────────────┬──────────────────────────┬─────────┐
+│ Titolo              │ Piattaforme      │ Data Rilascio│ Generi       │ Recensione AI            │ Voto AI │
+├─────────────────────┼──────────────────┼─────────────┼──────────────┼──────────────────────────┼─────────┤
+│ Super Mario Bros    │ NES, Switch      │ 1985-09-13  │ Platform     │ Un capolavoro senza tem..│ 9/10    │
+│ The Legend of Zelda │ NES, Game Boy    │ 1986-02-21  │ Action, Adv  │ L'inizio di una saga l...│ 8/10    │
+└─────────────────────┴──────────────────┴─────────────┴──────────────┴──────────────────────────┴─────────┘
 ```
 
-## 🔧 Configurazione
+### Esempio Recensione AI Completa
+```
+Titolo: Super Mario Bros
+Recensione AI: "Un capolavoro del platform che ha rivoluzionato l'industria videoludica.
+Gameplay intuitivo, level design perfetto e colonna sonora indimenticabile rendono
+questo titolo un'esperienza senza tempo che continua a divertire dopo decenni."
+Voto AI: 9/10
+```
 
-### API Key
-Il programma usa una chiave API RAWG predefinita. Per utilizzare la tua chiave personale:
+## ⚡ Performance e Costi
 
-1. Registrati su [RAWG.io](https://rawg.io/apidocs)
-2. Ottieni la tua API key
+### Recensioni AI
+- **Tempo**: ~2-3 secondi per recensione
+- **Costo**: ~$0.001-0.002 per recensione (dipende dalla lunghezza)
+- **Modello**: GPT-3.5-turbo (veloce ed economico)
+- **Limite**: Raccomandato max 50 giochi per sessione
+
+### Consigli per l'Uso
+- Usa le recensioni AI per ricerche mirate (pochi giochi di qualità)
+- Per ricerche ampie, evita le recensioni AI per contenere i costi
+- Le recensioni sono generate in italiano e contestualizzate
+
+## 🆕 Novità della Versione
+
+### v2.0 - AI Integration
+- ✅ Recensioni AI con OpenAI GPT-3.5
+- ✅ Voti automatici da 1 a 10
+- ✅ Esportazione multi-formato (CSV, MD, XLSX, XML)
+- ✅ Supporto recensioni AI in tutti i formati di export
+- ✅ Configurazione flessibile tramite file .env
+- ✅ Gestione errori migliorata per API esterne
 3. Modifica la variabile `api_key` in `main.py`
 
 ### Personalizzazioni
