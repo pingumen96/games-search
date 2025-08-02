@@ -38,7 +38,7 @@ from services.base import AIReviewService
 # ------------------------------------------------------------------------------
 
 DEFAULT_MODEL: str = "gpt-4.1"  # fast, multimodal reasoning model (April 2025)
-MAX_TOKENS: int = 200           # JSON output is short; keep a comfortable head‑room
+MAX_TOKENS: int = 400           # JSON output is short; keep a comfortable head‑room
 TEMPERATURE: float = 0.7
 
 logger = logging.getLogger(__name__)

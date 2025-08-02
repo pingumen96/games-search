@@ -1,6 +1,7 @@
 """
 RAWG API service implementation.
 """
+import calendar
 import requests
 from typing import List, Optional
 from models import Game
@@ -41,11 +42,13 @@ class RAWGService(GameAPIService):
 
     def _build_date_range(self, year: int, month: int) -> tuple[str, str]:
         """Build date range for API query"""
+
         start_date = f"{year}-{month:02d}-01"
-        if month == 12:
-            end_date = f"{year+1}-01-01"
-        else:
-            end_date = f"{year}-{month+1:02d}-01"
+
+        # Get the last day of the specified month
+        last_day = calendar.monthrange(year, month)[1]
+        end_date = f"{year}-{month:02d}-{last_day}"
+
         return start_date, end_date
 
     def _parse_game_data(self, game_data: dict) -> Game:

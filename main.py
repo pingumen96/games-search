@@ -25,8 +25,12 @@ def main():
         # Initialize controller (Facade pattern)
         controller = GameController()
 
+        print("Inizializzazione del controller completata.")
+
         # Initialize UI (Template Method pattern)
         ui = ConsoleUI(controller)
+
+        print("Inizializzazione dell'interfaccia utente completata.")
 
         # Run application
         ui.run()
