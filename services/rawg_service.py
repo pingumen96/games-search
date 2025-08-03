@@ -3,7 +3,8 @@ RAWG API service implementation.
 """
 import calendar
 import requests
-from typing import List, Optional
+import random
+from typing import List, Optional, Tuple
 from models import Game
 from .base import GameAPIService, APIServiceError
 
@@ -61,6 +62,28 @@ class RAWGService(GameAPIService):
 
         print(f"🎮 Totale giochi trovati: {len(games)}")
         return games
+
+    def fetch_random_games(self, min_year: int, max_year: int, platform_filter: Optional[List[str]] = None) -> Tuple[List[Game], int, int]:
+        """Fetch games from a random year and month within the specified range"""
+        # Validate year range
+        current_year = 2025  # You can use datetime.now().year if needed
+        if min_year < 1970:
+            min_year = 1970
+        if max_year > current_year:
+            max_year = current_year
+        if min_year > max_year:
+            raise ValueError(f"Anno minimo ({min_year}) non può essere maggiore dell'anno massimo ({max_year})")
+
+        # Generate random year and month
+        random_year = random.randint(min_year, max_year)
+        random_month = random.randint(1, 12)
+
+        print(f"🎲 Anno e mese scelti casualmente: {random_month}/{random_year}")
+
+        # Fetch games for the random period
+        games = self.fetch_games(random_year, random_month, platform_filter)
+
+        return games, random_year, random_month
 
     def _build_date_range(self, year: int, month: int) -> tuple[str, str]:
         """Build date range for API query"""

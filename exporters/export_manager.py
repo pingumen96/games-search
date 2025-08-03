@@ -24,7 +24,15 @@ class ExportManager:
 
         try:
             strategy = self.factory.create_strategy(format_name)
-            filepath = f"{filename}{strategy.extension}"
+
+            # Create games directory if it doesn't exist
+            games_dir = "games"
+            if not os.path.exists(games_dir):
+                os.makedirs(games_dir)
+                print(f"📁 Creata cartella: {games_dir}")
+
+            # Build filepath in games directory
+            filepath = os.path.join(games_dir, f"{filename}{strategy.extension}")
 
             strategy.export(games, filepath)
 

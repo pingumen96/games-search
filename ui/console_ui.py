@@ -73,6 +73,7 @@ class ConsoleUI(BaseUI):
             "Scegli un'azione:",
             choices=[
                 "🔍 Cerca giochi per data",
+                "🎲 Cerca giochi casuali",
                 "📊 Mostra ultimi risultati",
                 "📁 Esporta ultimi risultati",
                 "❌ Esci"
@@ -81,6 +82,8 @@ class ConsoleUI(BaseUI):
 
         if choice == "🔍 Cerca giochi per data":
             self._handle_search_games()
+        elif choice == "🎲 Cerca giochi casuali":
+            self._handle_random_search()
         elif choice == "📊 Mostra ultimi risultati":
             self._handle_show_results()
         elif choice == "📁 Esporta ultimi risultati":
@@ -103,6 +106,28 @@ class ConsoleUI(BaseUI):
 
         # Search and display
         games = self.game_controller.search_games(year, month, platform_filter, include_ai_reviews)
+        self._display_games(games)
+
+        # Offer export
+        if games:
+            self._offer_export(games)
+
+    def _handle_random_search(self):
+        """Handle random game search workflow"""
+        print("\n🎲 === RICERCA GIOCHI CASUALI ===")
+
+        # Get year range
+        min_year = self._get_min_year_input()
+        max_year = self._get_max_year_input(min_year)
+        platform_filter = self._get_platform_filter()
+        include_ai_reviews = self._ask_ai_reviews()
+
+        # Search and display
+        games, random_year, random_month = self.game_controller.search_random_games(
+            min_year, max_year, platform_filter, include_ai_reviews
+        )
+
+        print(f"\n🎯 Periodo selezionato: {random_month}/{random_year}")
         self._display_games(games)
 
         # Offer export
@@ -164,6 +189,48 @@ class ConsoleUI(BaseUI):
                     return month
                 else:
                     print("Errore: Il mese deve essere tra 1 e 12")
+            except ValueError:
+                print("Errore: Inserisci un numero valido")
+
+    def _get_min_year_input(self) -> int:
+        """Get minimum year input for random search"""
+        current_year = datetime.now().year
+
+        while True:
+            year_input = questionary.text(
+                f"Inserisci anno minimo (1970-{current_year}) o premi Invio per 1970:"
+            ).ask()
+
+            if not year_input:
+                return 1970
+
+            try:
+                year = int(year_input)
+                if 1970 <= year <= current_year:
+                    return year
+                else:
+                    print(f"Errore: L'anno deve essere tra 1970 e {current_year}")
+            except ValueError:
+                print("Errore: Inserisci un numero valido")
+
+    def _get_max_year_input(self, min_year: int) -> int:
+        """Get maximum year input for random search"""
+        current_year = datetime.now().year
+
+        while True:
+            year_input = questionary.text(
+                f"Inserisci anno massimo ({min_year}-{current_year}) o premi Invio per anno corrente ({current_year}):"
+            ).ask()
+
+            if not year_input:
+                return current_year
+
+            try:
+                year = int(year_input)
+                if min_year <= year <= current_year:
+                    return year
+                else:
+                    print(f"Errore: L'anno deve essere tra {min_year} e {current_year}")
             except ValueError:
                 print("Errore: Inserisci un numero valido")
 

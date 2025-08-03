@@ -1,7 +1,7 @@
 """
 Game controller using Facade pattern to coordinate services.
 """
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from models import Game
 from services import RAWGService, OpenAIReviewService
 from exporters import ExportManager
@@ -41,6 +41,25 @@ class GameController:
         # Store results
         self._last_results = games
         return games
+
+    def search_random_games(self, min_year: int, max_year: int, platform_filter: Optional[List[str]] = None,
+                           include_ai_reviews: bool = False) -> Tuple[List[Game], int, int]:
+        """Search for games from a random year and month"""
+        # Fetch games from random period
+        games, random_year, random_month = self.rawg_service.fetch_random_games(min_year, max_year, platform_filter)
+
+        # Generate AI reviews if requested and available
+        if include_ai_reviews and self.ai_service.is_available():
+            total_games = len(games)
+            for i, game in enumerate(games, 1):
+                print(f"🤖 Generando recensione AI per '{game.title}' ({i}/{total_games})...")
+                review, rating = self.ai_service.generate_review(game)
+                game.ai_review = review
+                game.ai_rating = rating
+
+        # Store results
+        self._last_results = games
+        return games, random_year, random_month
 
     def get_last_results(self) -> List[Game]:
         """Get the last search results"""
