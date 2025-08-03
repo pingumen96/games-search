@@ -21,23 +21,45 @@ class RAWGService(GameAPIService):
 
         print(f"\n🔍 Cercando giochi rilasciati nel {month}/{year}...")
 
-        url = f"{self.base_url}?dates={start_date},{end_date}&page_size=100&key={self.api_key}"
-
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
-        except requests.exceptions.RequestException as e:
-            raise APIServiceError(f"Errore nella richiesta API: {e}")
-
         games = []
-        for game_data in data.get('results', []):
-            game = self._parse_game_data(game_data)
+        page_size = 40
+        max_pages = 4
 
-            # Apply platform filter
-            if game.matches_platform_filter(platform_filter):
-                games.append(game)
+        for page in range(1, max_pages + 1):
+            print(f"  📄 Caricando pagina {page}/{max_pages}...")
 
+            url = f"{self.base_url}?dates={start_date},{end_date}&page_size={page_size}&page={page}&key={self.api_key}&ordering=-rating"
+
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+                data = response.json()
+            except requests.exceptions.RequestException as e:
+                raise APIServiceError(f"Errore nella richiesta API: {e}")
+
+            # Check if there are results in this page
+            results = data.get('results', [])
+            if not results:
+                print(f"  ⚠️  Nessun risultato nella pagina {page}, interrompendo la ricerca")
+                break
+
+            page_games = []
+            for game_data in results:
+                game = self._parse_game_data(game_data)
+
+                # Apply platform filter
+                if game.matches_platform_filter(platform_filter):
+                    page_games.append(game)
+
+            games.extend(page_games)
+            print(f"  ✅ Trovati {len(page_games)} giochi validi nella pagina {page}")
+
+            # Check if this is the last page based on API response
+            if not data.get('next'):
+                print(f"  🏁 Raggiunta l'ultima pagina disponibile ({page})")
+                break
+
+        print(f"🎮 Totale giochi trovati: {len(games)}")
         return games
 
     def _build_date_range(self, year: int, month: int) -> tuple[str, str]:
