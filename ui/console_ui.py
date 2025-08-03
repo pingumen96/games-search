@@ -371,17 +371,12 @@ class ConsoleUI(BaseUI):
                     print("❌ Formato non disponibile")
                 return
 
-            # Get filename
-            filename = questionary.text(
-                "Nome del file (senza estensione):",
-                default="games_results"
-            ).ask()
-
-            if not filename:
-                filename = "games_results"
+            # Generate automatic filename
+            filename = self.game_controller.get_automatic_filename()
+            print(f"📄 Nome file automatico: {filename}")
 
             # Export
-            filepath = self.game_controller.export_games(games, format_choice, filename)
+            filepath = self.game_controller.export_games(games, format_choice)
             print(f"✅ File esportato con successo: {filepath}")
 
         except Exception as e:

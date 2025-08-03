@@ -22,6 +22,8 @@ class GameController:
 
         # Store last results
         self._last_results: List[Game] = []
+        self._last_search_year: Optional[int] = None
+        self._last_search_month: Optional[int] = None
 
     def search_games(self, year: int, month: int, platform_filter: Optional[List[str]] = None,
                     include_ai_reviews: bool = False) -> List[Game]:
@@ -40,6 +42,8 @@ class GameController:
 
         # Store results
         self._last_results = games
+        self._last_search_year = year
+        self._last_search_month = month
         return games
 
     def search_random_games(self, min_year: int, max_year: int, platform_filter: Optional[List[str]] = None,
@@ -59,11 +63,21 @@ class GameController:
 
         # Store results
         self._last_results = games
+        self._last_search_year = random_year
+        self._last_search_month = random_month
         return games, random_year, random_month
 
     def get_last_results(self) -> List[Game]:
         """Get the last search results"""
         return self._last_results.copy()
+
+    def get_automatic_filename(self) -> str:
+        """Generate automatic filename based on last search"""
+        if self._last_search_year is not None and self._last_search_month is not None:
+            return f"games_results_{self._last_search_year}_{self._last_search_month}"
+        else:
+            # Fallback to default name if no search has been performed
+            return "games_results"
 
     def is_ai_available(self) -> bool:
         """Check if AI service is available"""
@@ -73,6 +87,8 @@ class GameController:
         """Get available export formats"""
         return self.export_manager.get_available_formats()
 
-    def export_games(self, games: List[Game], format_name: str, filename: str) -> str:
+    def export_games(self, games: List[Game], format_name: str, filename: Optional[str] = None) -> str:
         """Export games to specified format"""
+        if filename is None:
+            filename = self.get_automatic_filename()
         return self.export_manager.export_games(games, format_name, filename)
